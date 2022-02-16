@@ -1,4 +1,4 @@
-#include"../include/Omni3WD.h"
+#include"Omni3WD.h"
 
 Omni3WD::Omni3WD(MotorWheel* wheelBack,MotorWheel* wheelRight,MotorWheel* wheelLeft):
 			_wheelBack(wheelBack),_wheelRight(wheelRight),_wheelLeft(wheelLeft) {

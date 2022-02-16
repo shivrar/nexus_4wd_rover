@@ -5,7 +5,7 @@
 #include "wiring.h"
 #endif
 
-#include <PID_Beta6.h>
+#include "PID_Beta6.h"
 #include "fuzzy_table.h"
 #include <wiring_private.h>
 #include <HardwareSerial.h>

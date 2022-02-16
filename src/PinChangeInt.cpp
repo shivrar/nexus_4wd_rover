@@ -2,7 +2,7 @@
 	PinChangeInt.cpp
 */
 
-#include <PinChangeInt.h>
+#include "PinChangeInt.h"
 
 
 PCintPort::PCintPin PCintPort::PCintPin::pinDataAlloc[MAX_PIN_CHANGE_PINS];
