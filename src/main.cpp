@@ -1,14 +1,48 @@
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
 
+#include <PinChangeInt.h>
+#include <PinChangeIntConfig.h>
+#include <EEPROM.h>
+#define _NAMIKI_MOTOR	 //for Namiki 22CL-103501PG80:1
+#include <fuzzy_table.h>
+#include <PID_Beta6.h>
+#include <MotorWheel.h>
+#include <Omni4WD.h>
+
+#include <fuzzy_table.h>
+#include <PID_Beta6.h>
+
+#include <avr/eeprom.h>
+#include "Arduino.h"
+#include "EEPROM.h"
+
 // define two tasks for Blink & AnalogRead
 void TaskBlink( void *pvParameters );
 void TaskAnalogRead( void *pvParameters );
+void TaskOmniDemo( void *pvParameters );
+
 
 typedef int TaskProfiler;
 
 TaskProfiler BlinkProfilier;
 TaskProfiler AnalogProfiler;
+
+irqISR(irq1,isr1);
+MotorWheel wheel1(3,2,4,5,&irq1);
+
+irqISR(irq2,isr2);
+MotorWheel wheel2(11,12,14,15,&irq2);
+
+irqISR(irq3,isr3);
+MotorWheel wheel3(9,8,16,17,&irq3);
+
+irqISR(irq4,isr4);
+MotorWheel wheel4(10,7,18,19,&irq4);
+
+
+Omni4WD Omni(&wheel1,&wheel2,&wheel3,&wheel4);
+
 
 const uint16_t* LEDptr = (uint16_t*)(LED_BUILTIN);
 // the setup function runs once when you press reset or power the board
@@ -16,6 +50,11 @@ void setup() {
 
   // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
+
+  TCCR1B=TCCR1B&0xf8|0x01;    // Pin9,Pin10 PWM 31250Hz
+  TCCR2B=TCCR2B&0xf8|0x01;    // Pin3,Pin11 PWM 31250Hz
+
+  Omni.PIDEnable(0.31,0.01,0,10);
 
   // Now set up two tasks to run independently.
   xTaskCreate(
@@ -34,6 +73,16 @@ void setup() {
       ,  NULL
       ,  1  // Priority
       ,  NULL );
+
+
+  xTaskCreate(
+      TaskOmniDemo
+      ,  "OmniDemo"
+      ,  100  // Stack size
+      ,  NULL
+      ,  1  // Priority
+      ,  NULL );
+
 }
 
 void loop()
@@ -103,5 +152,16 @@ void TaskAnalogRead(void *pvParameters)  // This is a task.
     // print out the value you read:
     Serial.println(sensorValue);
     vTaskDelay(1);  // one tick delay (15ms) in between reads for stability
+  }
+}
+
+void TaskOmniDemo(void *pvParameters)  // This is a task.
+{
+  (void) pvParameters;
+
+
+  for (;;)
+  {
+    Omni.demoActions(30,1500,500,false);
   }
 }

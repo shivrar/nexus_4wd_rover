@@ -1,4 +1,4 @@
-#include<MotorWheel.h>
+#include"../include/MotorWheel.h"
 
 Motor::Motor(unsigned char _pinPWM,unsigned char _pinDir,
 				unsigned char _pinIRQ,unsigned char _pinIRQB,
