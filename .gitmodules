@@ -1,0 +1,6 @@
+[submodule "arduino-softtimer"]
+	path = arduino-softtimer
+	url = git@github.com:prampec/arduino-softtimer.git
+[submodule "SoftTimers"]
+	path = SoftTimers
+	url = git@github.com:end2endzone/SoftTimers.git
