@@ -4,23 +4,29 @@
 #include <MotorWheel.h>
 #include <Omni4WD.h>
 
+// Rover wheel stuff here
+/*
+	Mecanum4WD
+			  Front MOTORS_FB
+	wheelUL	\\		// wheelUR
+
+
+	wheelLL	//		\\ wheelLR
+			  Back MOTORS_BF
+ */
 irqISR(irq1,isr1);
-MotorWheel wheel1(3,2,4,5,&irq1);
-
+MotorWheel wheelUL(3,2,4,5,&irq1);
 irqISR(irq2,isr2);
-MotorWheel wheel2(11,12,14,15,&irq2);
-
+MotorWheel wheelLL(11,12,14,15,&irq2);
 irqISR(irq3,isr3);
-MotorWheel wheel3(9,8,16,17,&irq3);
-
+MotorWheel wheelLR(9,8,16,17,&irq3);
 irqISR(irq4,isr4);
 MotorWheel wheel4(10,7,18,19,&irq4);
+Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheel4);
 
 
-Omni4WD Omni(&wheel1,&wheel2,&wheel3,&wheel4);
-
+//Tasks are defined as such
 void callBack1(Task* me);
-
 Task t1(1000, callBack1);
 
 // the setup function runs once when you press reset or power the board

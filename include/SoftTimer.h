@@ -33,7 +33,7 @@
 // -- On the other hand some platforms might depend on the loop(). If you are
 // -- facing with unexpected problems, you might want to try enabling this macro.
 // -- ENABLE_LOOP_ITERATION is disabled by default.
-//#define ENABLE_LOOP_ITERATION
+#define ENABLE_LOOP_ITERATION
 
 // -- By default the next start of a task scheduled from the beginning of the previous
 // -- execution. But executions might shift if another task does not finish in time.

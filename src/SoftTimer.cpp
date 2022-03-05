@@ -29,6 +29,8 @@
 /**
  * The main loop is implemented here. You do not ever need to implement this function
  * if you think in event driven programming.
+ *
+ * Note: Moving this call to the main loop for clarity
  */
 //void loop() {
 //  SoftTimer.run(); // -- run() will never return, unless ENABLE_LOOP_ITERATION macro is defined.
