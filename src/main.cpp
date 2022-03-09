@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #define _NAMIKI_MOTOR	 //for Namiki 22CL-103501PG80:1
 #include "SoftTimer.h"
-#include <MotorWheel.h>
 #include <Omni4WD.h>
 
 // Rover wheel stuff here
@@ -24,7 +23,6 @@ irqISR(irq4,isr4);
 MotorWheel wheelUR(10,7,18,19,&irq4);
 Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheelUR);
 
-
 //Tasks are defined as such
 void callBack1(Task* me);
 Task t1(1000, callBack1);
@@ -45,19 +43,21 @@ void setup() {
   TCCR1B=TCCR1B&0xf8|0x01;    // Pin9,Pin10 PWM 31250Hz
   TCCR2B=TCCR2B&0xf8|0x01;    // Pin3,Pin11 PWM 31250Hz
 
-  wheelUL.PIDEnable(0.31,0.01,0,10);
-  wheelLL.PIDEnable(0.31,0.01,0,10);
-  wheelLR.PIDEnable(0.31,0.01,0,10);
-  wheelUR.PIDEnable(0.31,0.01,0,10);
+  Omni.PIDEnable(0.31,0.01,0,10);
 
 //  wheelUL.setSpeedMMPS(30);
 //  wheelLL.setSpeedMMPS(30);
 //  wheelLR.setSpeedMMPS(-30);
 //  wheelUR.setSpeedMMPS(-30);
-  wheelUL.setGearedSpeedRPM(9.57);
-  wheelLL.setGearedSpeedRPM(9.57);
-  wheelLR.setGearedSpeedRPM(-9.57);
-  wheelUR.setGearedSpeedRPM(-9.57);
+//  wheelUL.setGearedSpeedRPM(9.57);
+//  wheelLL.setGearedSpeedRPM(9.57);
+//  wheelLR.setGearedSpeedRPM(-9.57);
+//  wheelUR.setGearedSpeedRPM(-9.57);
+
+  //lets use their classes then
+  // velocity then angle & angular velocity
+  Omni.setCarMove(30, PI/2, 10/(sqrt(pow(Omni.getWheelspan()/2,2)*2)));
+
   // let's add a task to the timer
   SoftTimer.add(&t1);
   SoftTimer.add(&pid_reg);
@@ -81,10 +81,11 @@ void callBack1(Task* me) {
 
 void RegulationCallback(Task* me){
   //Omni.demoActions(30,1500,500,false);
-  wheelUL.PIDRegulate();
-  wheelLL.PIDRegulate();
-  wheelLR.PIDRegulate();
-  wheelUR.PIDRegulate();
+//  wheelUL.PIDRegulate();
+//  wheelLL.PIDRegulate();
+//  wheelLR.PIDRegulate();
+//  wheelUR.PIDRegulate();
+  Omni.PIDRegulate();
 }
 
 void SpeedCheck(Task* me){
