@@ -56,13 +56,13 @@ void setup() {
 
   //lets use their classes then
   // velocity then angle & angular velocity
-  Omni.setCarMove(30, PI/2, 10/(sqrt(pow(Omni.getWheelspan()/2,2)*2)));
+  //Omni.setCarMove(30, 0, 10/(sqrt(pow(Omni.getWheelspan()/2,2)*2)));
+  Omni.setCarMove(30, -PI/4, 0);
 
   // let's add a task to the timer
   SoftTimer.add(&t1);
   SoftTimer.add(&pid_reg);
   SoftTimer.add(&speed_check);
-  atan2f(0,0);
 }
 
 void loop()

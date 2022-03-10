@@ -86,10 +86,10 @@ int Omni4WD::setCarMove(int speedMMPS,float rad,float omega) {
 	//wheelURSetSpeedMMPS(speedMMPS*sin(rad)-speedMMPS*cos(rad)+omega*WHEELSPAN);
 
   //TODO: rotate these by PI/2 to make life a little easier when sending commands
-	wheelULSetSpeedMMPS(speedMMPS*sin(rad)+speedMMPS*cos(rad)-omega*WHEELSPAN);
-	wheelLLSetSpeedMMPS(speedMMPS*sin(rad)-speedMMPS*cos(rad)-omega*WHEELSPAN);
-	wheelLRSetSpeedMMPS(-(speedMMPS*sin(rad)+speedMMPS*cos(rad)+omega*WHEELSPAN));
-	wheelURSetSpeedMMPS(-(speedMMPS*sin(rad)-speedMMPS*cos(rad)+omega*WHEELSPAN));
+  wheelULSetSpeedMMPS(speedMMPS*cos(rad)+speedMMPS*sin(rad)-omega*WHEELSPAN);
+  wheelLLSetSpeedMMPS(speedMMPS*cos(rad)-speedMMPS*sin(rad)-omega*WHEELSPAN);
+  wheelLRSetSpeedMMPS(-(speedMMPS*cos(rad)+speedMMPS*sin(rad)+omega*WHEELSPAN));
+  wheelURSetSpeedMMPS(-(speedMMPS*cos(rad)-speedMMPS*sin(rad)+omega*WHEELSPAN));
 
 	return getCarSpeedMMPS();
 }
@@ -103,11 +103,11 @@ int Omni4WD::setCarAdvance(int speedMMPS) {
 	//wheelLRSetSpeedMMPS(speedMMPS,DIR_BACKOFF);
 	//wheelURSetSpeedMMPS(speedMMPS,DIR_BACKOFF);
 	//return wheelULGetSpeedMMPS();
-	return setCarMove(speedMMPS,PI/2,0);
+	return setCarMove(speedMMPS,0,0);
 }
 int Omni4WD::setCarBackoff(int speedMMPS) {
 	setCarStat(STAT_BACKOFF);
-	return setCarMove(speedMMPS,PI*3/2,0);
+	return setCarMove(speedMMPS,PI,0);
 }
 int Omni4WD::setCarLeft(int speedMMPS) {
 	setCarStat(STAT_LEFT);
@@ -117,11 +117,11 @@ int Omni4WD::setCarLeft(int speedMMPS) {
 	//wheelLRSetSpeedMMPS(speedMMPS,DIR_ADVANCE);
 	//wheelURSetSpeedMMPS(speedMMPS,DIR_BACKOFF);
 	//return wheelULGetSpeedMMPS();
-	return setCarMove(speedMMPS,PI,0);
+	return setCarMove(speedMMPS,PI/2,0);
 }
 int Omni4WD::setCarRight(int speedMMPS) {
 	setCarStat(STAT_RIGHT);
-	return setCarMove(speedMMPS,0,0);
+	return setCarMove(speedMMPS,-PI/2,0);
 }
 int Omni4WD::setCarUpperLeft(int speedMMPS) {
 	setCarStat(STAT_UPPERLEFT);
@@ -135,15 +135,15 @@ int Omni4WD::setCarUpperLeft(int speedMMPS) {
 }
 int Omni4WD::setCarLowerLeft(int speedMMPS) {
 	setCarStat(STAT_LOWERLEFT);
-	return setCarMove(speedMMPS,PI*5/4,0);
+	return setCarMove(speedMMPS,PI/2,0);
 }
 int Omni4WD::setCarLowerRight(int speedMMPS) {
 	setCarStat(STAT_LOWERRIGHT);
-	return setCarMove(speedMMPS,PI*7/4,0);
+	return setCarMove(speedMMPS,-PI*3/4,0);
 }
 int Omni4WD::setCarUpperRight(int speedMMPS) {
 	setCarStat(STAT_UPPERRIGHT);
-	return setCarMove(speedMMPS,PI/4,0);
+	return setCarMove(speedMMPS,-PI/4,0);
 }
 
 float Omni4WD::setCarRotate(float omega) {
