@@ -62,7 +62,7 @@ void setup() {
   SoftTimer.add(&t1);
   SoftTimer.add(&pid_reg);
   SoftTimer.add(&speed_check);
-
+  atan2f(0,0);
 }
 
 void loop()
@@ -94,3 +94,4 @@ void SpeedCheck(Task* me){
   Serial.print("MMPS--> "); //display the speed of the MotorWheel
   Serial.println(wheelUL.getSpeedMMPS(),DEC); //display the speed of the motor
 }
+

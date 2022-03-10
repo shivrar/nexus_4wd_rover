@@ -85,6 +85,7 @@ int Omni4WD::setCarMove(int speedMMPS,float rad,float omega) {
 	//wheelLRSetSpeedMMPS(speedMMPS*sin(rad)+speedMMPS*cos(rad)+omega*WHEELSPAN);
 	//wheelURSetSpeedMMPS(speedMMPS*sin(rad)-speedMMPS*cos(rad)+omega*WHEELSPAN);
 
+  //TODO: rotate these by PI/2 to make life a little easier when sending commands
 	wheelULSetSpeedMMPS(speedMMPS*sin(rad)+speedMMPS*cos(rad)-omega*WHEELSPAN);
 	wheelLLSetSpeedMMPS(speedMMPS*sin(rad)-speedMMPS*cos(rad)-omega*WHEELSPAN);
 	wheelLRSetSpeedMMPS(-(speedMMPS*sin(rad)+speedMMPS*cos(rad)+omega*WHEELSPAN));
@@ -93,6 +94,8 @@ int Omni4WD::setCarMove(int speedMMPS,float rad,float omega) {
 	return getCarSpeedMMPS();
 }
 
+
+//TODO: Adjust these commands with the new offset.
 int Omni4WD::setCarAdvance(int speedMMPS) {
 	setCarStat(STAT_ADVANCE);
 	//wheelULSetSpeedMMPS(speedMMPS,DIR_ADVANCE);
