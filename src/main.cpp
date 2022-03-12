@@ -65,15 +65,10 @@ void setup() {
 
   Omni.PIDEnable(0.31,0.01,0,10);
 
-//  wheelUL.setSpeedMMPS(30);
-//  wheelLL.setSpeedMMPS(30);
-//  wheelLR.setSpeedMMPS(-30);
-//  wheelUR.setSpeedMMPS(-30);
-//  wheelUL.setGearedSpeedRPM(9.57);
-//  wheelLL.setGearedSpeedRPM(9.57);
-//  wheelLR.setGearedSpeedRPM(-9.57);
-//  wheelUR.setGearedSpeedRPM(-9.57);
 
+  //TODO: Update diagram with updated stuff
+  //TODO: work on speed controllers/motion controller
+  //TODO: look at joystick deadzones
   //lets use their classes then
   // velocity then angle & angular velocity
   //Omni.setCarMove(30, 0, 10/(sqrt(pow(Omni.getWheelspan()/2,2)*2)));
@@ -90,9 +85,6 @@ void setup() {
 
 void loop()
 {
-  //TODO: Repeat the demo in a non blocking way.
-  // Using the wheel def and what the actions do etc
-  //Omni.demoActions(30,1500,500,false);
   // After careful consideration it's better to run everything with timer based stuff & interrupts
   SoftTimer.run();
 }
@@ -103,11 +95,6 @@ void callBack1(Task* me) {
 }
 
 void RegulationCallback(Task* me){
-  //Omni.demoActions(30,1500,500,false);
-//  wheelUL.PIDRegulate();
-//  wheelLL.PIDRegulate();
-//  wheelLR.PIDRegulate();
-//  wheelUR.PIDRegulate();
   Omni.PIDRegulate();
 }
 
@@ -176,16 +163,17 @@ void ParseCommands(Task* me){
   float throttle, yaw;
   float fwd, lr;
   throttle = MapCommand(channels[2], 900, 2000, 0.0, 1.0);
-  //TODO: If throttle value is too large we can use that as an indicator that we have lost RC comms
   if(throttle <= 1.1) {
     lr = -throttle * (MapCommand(channels[0], 0, 3000, -1.0, 1.0) * MAX_LR_VEL);
     fwd = -throttle * (MapCommand(channels[1], 0, 3000, -1.0, 1.0) * MAX_FORWARD_VEL);
     yaw = -throttle * (MapCommand(channels[3], 0, 3000, -1.0, 1.0) * MAX_ANG_VEL);
   } else {
     fwd = 0; lr = 0; yaw = 0.0; throttle = 0.0;
+  #ifdef DEBUG
     Serial.println("Comms Disconnected!! zero'ing commands!!");
+  #endif
   }
-  //TODO: Figure out what the hell is happening here wit the conversions
+#ifdef DEBUG
   Serial.print("throttle:");
   Serial.print(throttle,4);
   Serial.print("\t");
@@ -198,7 +186,8 @@ void ParseCommands(Task* me){
   Serial.print("Yaw:");
   Serial.print(yaw);
   Serial.print("\n");
-
+#endif
+  //TODO: Implement speed controllers for uf & ul instead of sending in raw
   Omni.setCarMovefl((int)fwd, (int)lr, yaw);
 
 }
