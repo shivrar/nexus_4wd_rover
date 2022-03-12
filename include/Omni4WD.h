@@ -40,25 +40,26 @@ public:
 	unsigned int setMotorAllBackoff(unsigned int speedMMPS=0);
 	unsigned int setCarStop(unsigned int ms=0);
 
-	int setCarMove(int speedMMPS,float rad,float omega=0);
-	int setCarAdvance(int speedMMPS=0);
-	int setCarBackoff(int speedMMPS=0);
-	int setCarLeft(int speedMMPS=0);
-	int setCarRight(int speedMMPS=0);
+	void setCarMove(int speedMMPS,float rad,float omega=0);
+  void setCarMovefl(int speedMMPS_uf,int speedMMPS_ul,float omega=0);
+	void setCarAdvance(int speedMMPS=0);
+	void setCarBackoff(int speedMMPS=0);
+	void setCarLeft(int speedMMPS=0);
+	void setCarRight(int speedMMPS=0);
 
-	float setCarRotate(float omega);
-	int setCarRotateLeft(int speedMMPS=0);
-	int setCarRotateRight(int speedMMPS=0);
+	void setCarRotate(float omega);
+	void setCarRotateLeft(int speedMMPS=0);
+	void setCarRotateRight(int speedMMPS=0);
 
-	int setCarUpperLeft(int speedMMPS=0);
-	int setCarLowerLeft(int speedMMPS=0);
-	int setCarUpperRight(int speedMMPS=0);
-	int setCarLowerRight(int speedMMPS=0);
+	void setCarUpperLeft(int speedMMPS=0);
+	void setCarLowerLeft(int speedMMPS=0);
+	void setCarUpperRight(int speedMMPS=0);
+	void setCarLowerRight(int speedMMPS=0);
 
-	float getCarSpeedRad() const;
-	int getCarSpeedMMPS() const;
-	int setCarSpeedMMPS(int speedMMPS=0,unsigned int ms=1000);
-	int setCarSlow2Stop(unsigned int ms=1000);
+	void getCarSpeedRad() const;
+	void getCarSpeedMMPS() const;
+	void setCarSpeedMMPS(int speedMMPS=0,unsigned int ms=1000);
+	void setCarSlow2Stop(unsigned int ms=1000);
 
 	int wheelULGetSpeedMMPS() const;
 	unsigned int wheelULSetSpeedMMPS(unsigned int speedMMPS,bool dir);
@@ -121,9 +122,6 @@ private:
 
 	unsigned char _switchMotorsStat;
 	unsigned char setSwitchMotorsStat(unsigned char switchMotorsStat);
-
-	Omni4WD();	
-
 };
 
 #endif
