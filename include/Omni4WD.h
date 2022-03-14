@@ -29,10 +29,38 @@
 #endif
 class Omni4WD {
 public:
+  /*Helper struct to help store 2D pose of the robot*/
+  struct Pose2D
+  {
+    float x;
+    float y;
+    float theta;
+
+    explicit Pose2D(float x_init=0.0, float y_init=0.0, float theta_init=0.0):x(x_init),
+                                                                     y(y_init), theta(theta_init)
+    {
+
+    }
+
+  };
+
+
 	Omni4WD(MotorWheel* wheelUL,MotorWheel* wheelLL,
 			MotorWheel* wheelLR,MotorWheel* wheelUR,unsigned int wheelspan=WHEELSPAN);
 	unsigned char switchMotors();
 	unsigned char switchMotorsReset();
+
+  // time is passed in seconds
+  void updatePose(float);
+  inline float getPosex() const{
+    return pose_.x;
+  }
+  inline float getPosey() const{
+    return pose_.y;
+  }
+  inline float getPosetheta() const{
+    return pose_.theta;
+  }
 	
 	unsigned int setMotorAll(unsigned int speedMMPS=0,bool dir=DIR_ADVANCE);
 	unsigned int setMotorAllStop();
@@ -114,6 +142,8 @@ private:
 	MotorWheel* _wheelLL;	// LowerLeft
 	MotorWheel* _wheelLR;	// LowerRight
 	MotorWheel* _wheelUR;	// UpperRight
+
+  Pose2D pose_;
 
 	unsigned int _wheelspan;	// 201208
 

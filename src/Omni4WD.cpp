@@ -6,7 +6,7 @@
 Omni4WD::Omni4WD(MotorWheel* wheelUL,MotorWheel* wheelLL,
 			MotorWheel* wheelLR,MotorWheel* wheelUR,unsigned int wheelspan):
 			_wheelUL(wheelUL),_wheelLL(wheelLL),
-			_wheelLR(wheelLR),_wheelUR(wheelUR),_wheelspan(wheelspan) {
+			_wheelLR(wheelLR),_wheelUR(wheelUR),pose_(),_wheelspan(wheelspan) {
 	setSwitchMotorsStat(MOTORS_FB);
 }
 unsigned char Omni4WD::getSwitchMotorsStat() const {
@@ -380,54 +380,7 @@ void Omni4WD::demoActions(unsigned int speedMMPS,unsigned int duration,
 	delayMS(duration);
 	//switchMotors();
 }
-/*		// original
-void Omni4WD::demoActions(unsigned int speedMMPS,unsigned int uptime,
-							unsigned int duration,bool debug) {
-	setCarAdvance();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarBackoff();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarLeft();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarRight();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarUpperLeft();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarLowerRight();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarLowerLeft();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarUpperRight();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarRotateLeft();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarRotateRight();
-	setCarSpeedMMPS(speedMMPS,uptime);
-	delayMS(duration,debug);
-	setCarSlow2Stop(uptime);
-	setCarStop();
-	delayMS(duration,debug);
-	switchMotors();
-}
- */
+
 void Omni4WD::debugger(bool wheelULDebug,bool wheelLLDebug,bool wheelLRDebug,bool wheelURDebug) const {
 	if(wheelULDebug) _wheelUL->debugger();
 	if(wheelLLDebug) _wheelLL->debugger();
@@ -435,6 +388,41 @@ void Omni4WD::debugger(bool wheelULDebug,bool wheelLLDebug,bool wheelLRDebug,boo
 	if(wheelURDebug) _wheelUR->debugger();
 }
 
+void Omni4WD::updatePose(float dt) {
+//  int vtx = (wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() + wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
+//  int vty = (wheelUL.getSpeedMMPS() + wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
+//  float omega = ((-wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/(4.0 * WHEELSPAN));
+  int vtx = (wheelULGetSpeedMMPS()  - wheelURGetSpeedMMPS() + wheelLLGetSpeedMMPS() -
+             wheelLRGetSpeedMMPS())/4;
+  int vty =  (wheelULGetSpeedMMPS() + wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() -
+              wheelLRGetSpeedMMPS())/4;
+  float omega = ((-wheelULGetSpeedMMPS() - wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() - wheelLRGetSpeedMMPS()) /(4.0 * WHEELSPAN));
+  Serial.print("dt:");
+  Serial.print(dt,6);
+  Serial.print("\t");
+  Serial.print("vtx: ");
+  Serial.print(vtx, DEC);
+  Serial.print("\t");
+  Serial.print("vty: ");
+  Serial.print(vty, DEC);
+  Serial.print("\t");
+  Serial.print("omega: ");
+  Serial.print(omega, 4);
+  // speeds seems fine
+
+
+  int vr = sqrt((vtx*vtx)+(vty*vty));
+  float phi = atan2(vty,vtx);
+
+  float dtheta = omega * dt;
+  Serial.print("\t");
+  Serial.print("dtheta: ");
+  Serial.println(dtheta, 4);
+  pose_.x+= vr* cos(pose_.theta + dtheta/4.0 + phi)*dt;
+  pose_.y += vr* sin(pose_.theta + dtheta/4.0 + phi)*dt;
+  pose_.theta += dtheta;
+  // TODO: these pose updates should also be based on the time of the change from when the wheel speed was recorded.
+}
 
 
 

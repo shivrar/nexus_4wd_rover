@@ -195,6 +195,7 @@ struct ISRVars {
 	volatile unsigned long pulseStartMicros;
 	volatile unsigned long pulseEndMicros;
 	volatile unsigned int  speedPPS;
+  //TODO: Add in this part here to also calculate the speed if possible
 	//volatile unsigned int  lastSpeedPPS;
 	//volatile int accPPSS;	// acceleration, Pulse Per Sec^2
 	volatile bool currDirection;

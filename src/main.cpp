@@ -45,8 +45,10 @@ void SpeedCheck(Task* me);
 Task speed_check(500, SpeedCheck);
 
 void ParseCommands(Task* me);
-Task comm(10, ParseCommands);
+Task comm(50, ParseCommands);
 
+void DeadReckon(Task* me);
+Task dr(50, DeadReckon);
 //void DemoCallback(Task* me);
 //Task demo(1000, DemoCallback);
 // the setup function runs once when you press reset or power the board
@@ -71,16 +73,18 @@ void setup() {
   //TODO: look at joystick deadzones
   //lets use their classes then
   // velocity then angle & angular velocity
-  //Omni.setCarMove(30, 0, 10/(sqrt(pow(Omni.getWheelspan()/2,2)*2)));
+  Omni.setCarMovefl(0, 0, PI/60);
   //Omni.setCarMove(30, (float)-PI/4, 0);
   //Omni.setCarMovefl(30,0,0);
   // let's add a task to the timer
+  SoftTimer.add(&dr);
   SoftTimer.add(&t1);
   SoftTimer.add(&pid_reg);
   //SoftTimer.add(&speed_check);
-  SoftTimer.add(&comm);
+  //SoftTimer.add(&comm);
+
   // do some interrupt magic here
-  PCintPort::attachInterrupt(6, GetCommands, FALLING);
+  //PCintPort::attachInterrupt(6, GetCommands, FALLING);
 }
 
 void loop()
@@ -91,6 +95,9 @@ void loop()
 
 
 void callBack1(Task* me) {
+//  float dt = ((float)micros() - (float)me->lastCallTimeMicros)/(float)1000000.0;
+//  Serial.print("dt: ");
+//  Serial.println(dt,6);
   digitalWrite(13, !digitalRead(13));
 }
 
@@ -190,6 +197,46 @@ void ParseCommands(Task* me){
   //TODO: Implement speed controllers for uf & ul instead of sending in raw
   Omni.setCarMovefl((int)fwd, (int)lr, yaw);
 
+}
+
+void DeadReckon(Task* me){
+  float dt = ((float)me->nowMicros - (float)me->lastCallTimeMicros)/(float)1000000.0;
+  Omni.updatePose(dt);
+//  Serial.print("MMPS 1--> "); //display the speed of the MotorWheel
+//  Serial.print(wheelUL.getSpeedMMPS(),DEC); //display the speed of the motor
+//  Serial.print("\t");
+//  Serial.print("MMPS 2--> "); //display the speed of the MotorWheel
+//  Serial.print(wheelUR.getSpeedMMPS(),DEC); //display the speed of the motor
+//  Serial.print("\t");
+//  Serial.print("MMPS 3--> "); //display the speed of the MotorWheel
+//  Serial.print(wheelLL.getSpeedMMPS(),DEC); //display the speed of the motor
+//  Serial.print("\t");
+//  Serial.print("MMPS 4--> "); //display the speed of the MotorWheel
+//  Serial.print(wheelLR.getSpeedMMPS(),DEC); //display the speed of the motor
+//  Serial.print("\n");
+//  int vtx = (wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() + wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
+//  int vty = (wheelUL.getSpeedMMPS() + wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
+//  float omega = ((-wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/(4.0 * WHEELSPAN));
+//  Serial.print("vtx: ");
+//  Serial.print(vtx, DEC);
+//  Serial.print("\t");
+//  Serial.print("vty: ");
+//  Serial.print(vty, DEC);
+//  Serial.print("\t");
+//  Serial.print("omega: ");
+//  Serial.println(omega, 4);
+//  Serial.print("dt:");
+//  Serial.print(dt,6);
+//  Serial.print("\t");
+//  Serial.print("x:");
+//  Serial.print(Omni.getPosex(),4);
+//  Serial.print("\t");
+//  Serial.print("y:");
+//  Serial.print(Omni.getPosey(),4);
+//  Serial.print("\t");
+//  Serial.print("theta:");
+//  Serial.print(Omni.getPosetheta(),4);
+//  Serial.print("\n");
 }
 
 //~~~~~~~~~~~~~~~~ ISR section
