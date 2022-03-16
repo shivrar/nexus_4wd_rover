@@ -53,6 +53,8 @@ V1.5	201209	Omni4WD is re-implemented, and now return value of Omni4WD::getSpeed
 #define DIR_ADVANCE HIGH
 #define DIR_BACKOFF LOW
 
+#define _NAMIKI_MOTOR	 //for Namiki 22CL-103501PG80:1
+
 #define  PIN_UNDEFINED 255
 #define  REF_VOLT 12
 /*for maple*/

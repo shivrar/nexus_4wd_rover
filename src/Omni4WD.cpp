@@ -397,17 +397,17 @@ void Omni4WD::updatePose(float dt) {
   int vty =  (wheelULGetSpeedMMPS() + wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() -
               wheelLRGetSpeedMMPS())/4;
   float omega = ((-wheelULGetSpeedMMPS() - wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() - wheelLRGetSpeedMMPS()) /(4.0 * WHEELSPAN));
-  Serial.print("dt:");
-  Serial.print(dt,6);
-  Serial.print("\t");
-  Serial.print("vtx: ");
-  Serial.print(vtx, DEC);
-  Serial.print("\t");
-  Serial.print("vty: ");
-  Serial.print(vty, DEC);
-  Serial.print("\t");
-  Serial.print("omega: ");
-  Serial.print(omega, 4);
+//  Serial.print("dt:");
+//  Serial.print(dt,6);
+//  Serial.print("\t");
+//  Serial.print("vtx: ");
+//  Serial.print(vtx, DEC);
+//  Serial.print("\t");
+//  Serial.print("vty: ");
+//  Serial.print(vty, DEC);
+//  Serial.print("\t");
+//  Serial.print("omega: ");
+//  Serial.print(omega, 4);
   // speeds seems fine
 
 
@@ -415,9 +415,9 @@ void Omni4WD::updatePose(float dt) {
   float phi = atan2(vty,vtx);
 
   float dtheta = omega * dt;
-  Serial.print("\t");
-  Serial.print("dtheta: ");
-  Serial.println(dtheta, 4);
+//  Serial.print("\t");
+//  Serial.print("dtheta: ");
+//  Serial.println(dtheta, 4);
   pose_.x+= vr* cos(pose_.theta + dtheta/4.0 + phi)*dt;
   pose_.y += vr* sin(pose_.theta + dtheta/4.0 + phi)*dt;
   pose_.theta += dtheta;

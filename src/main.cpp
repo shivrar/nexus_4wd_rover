@@ -4,9 +4,9 @@
 #include <Omni4WD.h>
 #include "PinChangeInt.h"
 
-#define MAX_LR_VEL 70
-#define MAX_FORWARD_VEL 70
-#define MAX_ANG_VEL PI/10
+#define MAX_LR_VEL 140
+#define MAX_FORWARD_VEL 140
+#define MAX_ANG_VEL PI/5
 
 float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
   return static_cast<float>(x - in_min) * (out_max - out_min) / static_cast<float>(in_max - in_min) + out_min;
@@ -73,7 +73,7 @@ void setup() {
   //TODO: look at joystick deadzones
   //lets use their classes then
   // velocity then angle & angular velocity
-  Omni.setCarMovefl(0, 0, PI/60);
+//  Omni.setCarMovefl(0, 0, PI/15);
   //Omni.setCarMove(30, (float)-PI/4, 0);
   //Omni.setCarMovefl(30,0,0);
   // let's add a task to the timer
@@ -81,10 +81,10 @@ void setup() {
   SoftTimer.add(&t1);
   SoftTimer.add(&pid_reg);
   //SoftTimer.add(&speed_check);
-  //SoftTimer.add(&comm);
+  SoftTimer.add(&comm);
 
   // do some interrupt magic here
-  //PCintPort::attachInterrupt(6, GetCommands, FALLING);
+  PCintPort::attachInterrupt(6, GetCommands, FALLING);
 }
 
 void loop()
@@ -226,17 +226,17 @@ void DeadReckon(Task* me){
 //  Serial.print("omega: ");
 //  Serial.println(omega, 4);
 //  Serial.print("dt:");
-//  Serial.print(dt,6);
-//  Serial.print("\t");
-//  Serial.print("x:");
-//  Serial.print(Omni.getPosex(),4);
-//  Serial.print("\t");
-//  Serial.print("y:");
-//  Serial.print(Omni.getPosey(),4);
-//  Serial.print("\t");
-//  Serial.print("theta:");
-//  Serial.print(Omni.getPosetheta(),4);
-//  Serial.print("\n");
+  Serial.print(dt,6);
+  Serial.print("\t");
+  Serial.print("x:");
+  Serial.print(Omni.getPosex(),4);
+  Serial.print("\t");
+  Serial.print("y:");
+  Serial.print(Omni.getPosey(),4);
+  Serial.print("\t");
+  Serial.print("theta:");
+  Serial.print(Omni.getPosetheta(),4);
+  Serial.print("\n");
 }
 
 //~~~~~~~~~~~~~~~~ ISR section
