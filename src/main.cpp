@@ -4,8 +4,8 @@
 #include <Omni4WD.h>
 #include "PinChangeInt.h"
 
-#define MAX_LR_VEL 140
-#define MAX_FORWARD_VEL 140
+#define MAX_LR_VEL 210
+#define MAX_FORWARD_VEL 210
 #define MAX_ANG_VEL PI/5
 
 float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
@@ -65,7 +65,7 @@ void setup() {
   TCCR1B=TCCR1B&0xf8|0x01;    // Pin9,Pin10 PWM 31250Hz
   TCCR2B=TCCR2B&0xf8|0x01;    // Pin3,Pin11 PWM 31250Hz
 
-  Omni.PIDEnable(0.31,0.01,0,10);
+  Omni.PIDEnable(0.21,0.01,0.005,10);
 
 
   //TODO: Update diagram with updated stuff
@@ -241,8 +241,8 @@ void DeadReckon(Task* me){
 
 //~~~~~~~~~~~~~~~~ ISR section
 void GetCommands(){
+  //TODO: look here to improve the controller commands
   a=micros(); //store time value a when pin value falling
-  //a = xTaskGetTickCount()/portTICK_PERIOD_MS;
   c=a-b;      //calculating time inbetween two peaks
   b=a;        //
   if(c>10000 || i>=8){

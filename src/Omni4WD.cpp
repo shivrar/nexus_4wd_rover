@@ -6,7 +6,7 @@
 Omni4WD::Omni4WD(MotorWheel* wheelUL,MotorWheel* wheelLL,
 			MotorWheel* wheelLR,MotorWheel* wheelUR,unsigned int wheelspan):
 			_wheelUL(wheelUL),_wheelLL(wheelLL),
-			_wheelLR(wheelLR),_wheelUR(wheelUR),pose_(),_wheelspan(wheelspan) {
+			_wheelLR(wheelLR),_wheelUR(wheelUR),pose_(), vels_(),_wheelspan(wheelspan) {
 	setSwitchMotorsStat(MOTORS_FB);
 }
 unsigned char Omni4WD::getSwitchMotorsStat() const {
@@ -397,6 +397,9 @@ void Omni4WD::updatePose(float dt) {
   int vty =  (wheelULGetSpeedMMPS() + wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() -
               wheelLRGetSpeedMMPS())/4;
   float omega = ((-wheelULGetSpeedMMPS() - wheelURGetSpeedMMPS() - wheelLLGetSpeedMMPS() - wheelLRGetSpeedMMPS()) /(4.0 * WHEELSPAN));
+  vels_.x = vtx;
+  vels_.y = vty;
+  vels_.theta = omega;
 //  Serial.print("dt:");
 //  Serial.print(dt,6);
 //  Serial.print("\t");

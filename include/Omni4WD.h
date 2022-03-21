@@ -61,6 +61,16 @@ public:
   inline float getPosetheta() const{
     return pose_.theta;
   }
+
+  inline float getFwdVel() const{
+    return vels_.x;
+  }
+  inline float getLatVel() const{
+    return vels_.y;
+  }
+  inline float getAngVel() const{
+    return vels_.theta;
+  }
 	
 	unsigned int setMotorAll(unsigned int speedMMPS=0,bool dir=DIR_ADVANCE);
 	unsigned int setMotorAllStop();
@@ -144,6 +154,7 @@ private:
 	MotorWheel* _wheelUR;	// UpperRight
 
   Pose2D pose_;
+  Pose2D vels_; // can use the same struct for velocity info as well
 
 	unsigned int _wheelspan;	// 201208
 
