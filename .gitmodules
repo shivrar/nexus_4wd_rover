@@ -4,3 +4,6 @@
 [submodule "SoftTimers"]
 	path = SoftTimers
 	url = git@github.com:end2endzone/SoftTimers.git
+[submodule "PPM-reader"]
+	path = PPM-reader
+	url = git@github.com:dimag0g/PPM-reader.git

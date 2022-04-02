@@ -3,9 +3,10 @@
 #include "SoftTimer.h"
 #include <Omni4WD.h>
 #include "PinChangeInt.h"
+#include "PPMReader.h"
 
-#define MAX_LR_VEL 210
-#define MAX_FORWARD_VEL 210
+#define MAX_LR_VEL 200
+#define MAX_FORWARD_VEL 200
 #define MAX_ANG_VEL PI/5
 
 float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
@@ -49,13 +50,18 @@ Task comm(50, ParseCommands);
 
 void DeadReckon(Task* me);
 Task dr(50, DeadReckon);
+
+//void TestReader(Task *me);
+//Task ppm(50, TestReader);
 //void DemoCallback(Task* me);
 //Task demo(1000, DemoCallback);
 // the setup function runs once when you press reset or power the board
 
-void GetCommands();
-uint8_t i;
-uint16_t a,b,c, ch[8];
+//void GetCommands();
+//uint8_t i;
+unsigned int prev_ch[8];
+
+PPMReader *reader= NULL;
 
 void setup() {
   pinMode(13, OUTPUT);
@@ -66,6 +72,7 @@ void setup() {
   TCCR2B=TCCR2B&0xf8|0x01;    // Pin3,Pin11 PWM 31250Hz
 
   Omni.PIDEnable(0.21,0.01,0.005,10);
+  reader = new PPMReader(6, 8);
 
 
   //TODO: Update diagram with updated stuff
@@ -84,7 +91,7 @@ void setup() {
   SoftTimer.add(&comm);
 
   // do some interrupt magic here
-  PCintPort::attachInterrupt(6, GetCommands, FALLING);
+  //PCintPort::attachInterrupt(6, GetCommands, FALLING);
 }
 
 void loop()
@@ -139,41 +146,50 @@ void DemoCallback(Task* me){
 }
 
 void ParseCommands(Task* me){
-  uint16_t channels[8];
-  memcpy(channels, ch, 8*2);
-/***
+  #ifdef DEBUG
   Serial.print("ch1:");
-  Serial.print(commands[0],4);
+  Serial.print(reader->rawChannelValue(1));
   Serial.print("\t");
   Serial.print("ch2:");
-  Serial.print(commands[1],4);
+  Serial.print(reader->rawChannelValue(2));
   Serial.print("\t");
   Serial.print("ch3:");
-  Serial.print(commands[2],4);
+  Serial.print(reader->rawChannelValue(3));
   Serial.print("\t");
   Serial.print("ch4:");
-  Serial.print(commands[3],4);
+  Serial.print(reader->rawChannelValue(4));
   Serial.print("\t");
   Serial.print("ch5:");
-  Serial.print(commands[4],4);
+  Serial.print(reader->rawChannelValue(5));
   Serial.print("\t");
   Serial.print("ch6:");
-  Serial.print(commands[5],4);
+  Serial.print(reader->rawChannelValue(6));
   Serial.print("\t");
   Serial.print("ch7:");
-  Serial.print(commands[6],4);
+  Serial.print(reader->rawChannelValue(7));
   Serial.print("\t");
   Serial.print("ch8:");
-  Serial.print(commands[7],4);
+  Serial.print(reader->rawChannelValue(8));
   Serial.print("\n");
- ***/
+  #endif
+
   float throttle, yaw;
   float fwd, lr;
-  throttle = MapCommand(channels[2], 900, 2000, 0.0, 1.0);
-  if(throttle <= 1.1) {
-    lr = -throttle * (MapCommand(channels[0], 0, 3000, -1.0, 1.0) * MAX_LR_VEL);
-    fwd = -throttle * (MapCommand(channels[1], 0, 3000, -1.0, 1.0) * MAX_FORWARD_VEL);
-    yaw = -throttle * (MapCommand(channels[3], 0, 3000, -1.0, 1.0) * MAX_ANG_VEL);
+
+  unsigned int curr_ch[8] = {reader->latestValidChannelValue(1,prev_ch[0]),
+                             reader->latestValidChannelValue(2,prev_ch[1]),
+                             reader->latestValidChannelValue(3,prev_ch[2]),
+                             reader->latestValidChannelValue(4,prev_ch[3]),
+                             reader->latestValidChannelValue(5,prev_ch[4]),
+                             reader->latestValidChannelValue(6,prev_ch[5]),
+                             reader->latestValidChannelValue(7,prev_ch[6]),
+                             reader->latestValidChannelValue(8,prev_ch[7])};
+
+  throttle = MapCommand(curr_ch[2],800, 2200, 0.0, 1.0);
+  if(throttle <= 1.1 && curr_ch[6] > 1400) {
+    lr = -throttle * (MapCommand(curr_ch[0], 800, 2200, -1.0, 1.0) * MAX_LR_VEL);
+    fwd = -throttle * (MapCommand(curr_ch[1], 800, 2200,-1.0, 1.0) * MAX_FORWARD_VEL);
+    yaw = -throttle * (MapCommand(curr_ch[3], 800, 2200, -1.0, 1.0) * MAX_ANG_VEL);
   } else {
     fwd = 0; lr = 0; yaw = 0.0; throttle = 0.0;
   #ifdef DEBUG
@@ -196,7 +212,8 @@ void ParseCommands(Task* me){
 #endif
   //TODO: Implement speed controllers for uf & ul instead of sending in raw
   Omni.setCarMovefl((int)fwd, (int)lr, yaw);
-
+  //instead, iof defaulting to zero let's use the last valid data for the channel
+  memcpy(prev_ch, curr_ch, 8 * sizeof (unsigned int));
 }
 
 void DeadReckon(Task* me){
@@ -226,29 +243,56 @@ void DeadReckon(Task* me){
 //  Serial.print("omega: ");
 //  Serial.println(omega, 4);
 //  Serial.print("dt:");
-  Serial.print(dt,6);
-  Serial.print("\t");
-  Serial.print("x:");
-  Serial.print(Omni.getPosex(),4);
-  Serial.print("\t");
-  Serial.print("y:");
-  Serial.print(Omni.getPosey(),4);
-  Serial.print("\t");
-  Serial.print("theta:");
-  Serial.print(Omni.getPosetheta(),4);
-  Serial.print("\n");
+//  Serial.print(dt,6);
+//  Serial.print("\t");
+//  Serial.print("x:");
+//  Serial.print(Omni.getPosex(),4);
+//  Serial.print("\t");
+//  Serial.print("y:");
+//  Serial.print(Omni.getPosey(),4);
+//  Serial.print("\t");
+//  Serial.print("theta:");
+//  Serial.print(Omni.getPosetheta(),4);
+//  Serial.print("\n");
 }
 
 //~~~~~~~~~~~~~~~~ ISR section
-void GetCommands(){
-  //TODO: look here to improve the controller commands
-  a=micros(); //store time value a when pin value falling
-  c=a-b;      //calculating time inbetween two peaks
-  b=a;        //
-  if(c>10000 || i>=8){
-    i = 0;
-    return;
-  }
-  ch[i] = c;
-  i++;
-}
+//void GetCommands(){
+//  //TODO: look here to improve the controller commands
+//  a=micros(); //store time value a when pin value falling
+//  c=a-b;      //calculating time inbetween two peaks
+//  b=a;        //
+//  if(c>5000 || i>=8){
+//    i = 0;
+//    return;
+//  }
+//  ch[i] = c;
+//  i++;
+//}
+
+//void TestReader(Task* me){
+//  Serial.print("Ch1: ");
+//  Serial.print(reader->latestValidChannelValue(1,0));
+//  Serial.print("\t");
+//  Serial.print("Ch2: ");
+//  Serial.print(reader->latestValidChannelValue(2,0));
+//  Serial.print("\t");
+//  Serial.print("Ch3: ");
+//  Serial.print(reader->latestValidChannelValue(3,0));
+//  Serial.print("\t");
+//  Serial.print("Ch4: ");
+//  Serial.print(reader->latestValidChannelValue(4,0));
+//  Serial.print("\t");
+//  Serial.print("Ch5: ");
+//  Serial.print(reader->latestValidChannelValue(5,0));
+//  Serial.print("\t");
+//  Serial.print("Ch6: ");
+//  Serial.print(reader->latestValidChannelValue(6,0));
+//  Serial.print("\t");
+//  Serial.print("Ch7: ");
+//  Serial.print(reader->latestValidChannelValue(7,0));
+//  Serial.print("\t");
+//  Serial.print("Ch8: ");
+//  Serial.print(reader->latestValidChannelValue(8,0));
+//  Serial.print("\n");
+//}
