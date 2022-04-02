@@ -77,7 +77,7 @@ void setup() {
 
   //TODO: Update diagram with updated stuff
   //TODO: work on speed controllers/motion controller
-  //TODO: look at joystick deadzones
+  //TODO: Update DR code
   //lets use their classes then
   // velocity then angle & angular velocity
 //  Omni.setCarMovefl(0, 0, PI/15);
