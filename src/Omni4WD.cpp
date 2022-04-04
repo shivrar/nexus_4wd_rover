@@ -400,17 +400,17 @@ void Omni4WD::updatePose(float dt) {
   vels_.x = vtx;
   vels_.y = vty;
   vels_.theta = omega;
-//  Serial.print("dt:");
-//  Serial.print(dt,6);
-//  Serial.print("\t");
-//  Serial.print("vtx: ");
-//  Serial.print(vtx, DEC);
-//  Serial.print("\t");
-//  Serial.print("vty: ");
-//  Serial.print(vty, DEC);
-//  Serial.print("\t");
-//  Serial.print("omega: ");
-//  Serial.print(omega, 4);
+  Serial.print("dt:");
+  Serial.print(dt,6);
+  Serial.print("\t");
+  Serial.print("vtx: ");
+  Serial.print(vtx, DEC);
+  Serial.print("\t");
+  Serial.print("vty: ");
+  Serial.print(vty, DEC);
+  Serial.print("\t");
+  Serial.print("omega: ");
+  Serial.print(omega, 4);
   // speeds seems fine
 
 

@@ -119,31 +119,6 @@ void SpeedCheck(Task* me){
   Serial.println(wheelUL.getSpeedMMPS(),DEC); //display the speed of the motor
 }
 
-void DemoCallback(Task* me){
-  if(count == 0)
-    //Start forward
-    Omni.setCarMovefl(30,0,0);
-  else if(count == 2)
-    Omni.setCarMovefl(0,0,0);
-  else if(count == 3)
-    //Reverse
-    Omni.setCarMovefl(-30,0,0);
-  else if(count == 5)
-    Omni.setCarMovefl(0,0,0);
-  else if(count == 6)
-    //Go left
-    Omni.setCarMovefl(0,30,0);
-  else if(count == 8)
-    Omni.setCarMovefl(0,0,0);
-  else if(count == 9)
-    //Go right
-    Omni.setCarMovefl(0, -30, 0);
-  else if(count == 11)
-    Omni.setCarMovefl(0,0,0);
-  else if(count >=13)
-    count = 0;
-  count++;
-}
 
 void ParseCommands(Task* me){
   #ifdef DEBUG
@@ -295,4 +270,30 @@ void DeadReckon(Task* me){
 //  Serial.print("Ch8: ");
 //  Serial.print(reader->latestValidChannelValue(8,0));
 //  Serial.print("\n");
+//}
+
+//void DemoCallback(Task* me){
+//  if(count == 0)
+//    //Start forward
+//    Omni.setCarMovefl(30,0,0);
+//  else if(count == 2)
+//    Omni.setCarMovefl(0,0,0);
+//  else if(count == 3)
+//    //Reverse
+//    Omni.setCarMovefl(-30,0,0);
+//  else if(count == 5)
+//    Omni.setCarMovefl(0,0,0);
+//  else if(count == 6)
+//    //Go left
+//    Omni.setCarMovefl(0,30,0);
+//  else if(count == 8)
+//    Omni.setCarMovefl(0,0,0);
+//  else if(count == 9)
+//    //Go right
+//    Omni.setCarMovefl(0, -30, 0);
+//  else if(count == 11)
+//    Omni.setCarMovefl(0,0,0);
+//  else if(count >=13)
+//    count = 0;
+//  count++;
 //}
