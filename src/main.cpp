@@ -7,7 +7,7 @@
 
 #define MAX_LR_VEL 200
 #define MAX_FORWARD_VEL 200
-#define MAX_ANG_VEL PI/5
+#define MAX_ANG_VEL PI/4
 
 float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
   return static_cast<float>(x - in_min) * (out_max - out_min) / static_cast<float>(in_max - in_min) + out_min;
@@ -220,15 +220,15 @@ void DeadReckon(Task* me){
 //  Serial.print("dt:");
 //  Serial.print(dt,6);
 //  Serial.print("\t");
-//  Serial.print("x:");
-//  Serial.print(Omni.getPosex(),4);
-//  Serial.print("\t");
-//  Serial.print("y:");
-//  Serial.print(Omni.getPosey(),4);
-//  Serial.print("\t");
-//  Serial.print("theta:");
-//  Serial.print(Omni.getPosetheta(),4);
-//  Serial.print("\n");
+  Serial.print("x:");
+  Serial.print(Omni.getPosex(),4);
+  Serial.print("\t");
+  Serial.print("y:");
+  Serial.print(Omni.getPosey(),4);
+  Serial.print("\t");
+  Serial.print("theta:");
+  Serial.print(Omni.getPosetheta(),4);
+  Serial.print("\n");
 }
 
 //~~~~~~~~~~~~~~~~ ISR section

@@ -25,7 +25,8 @@
 			  Back MOTORS_BF
  */
 #ifndef WHEELSPAN
-#define WHEELSPAN 300
+//#define WHEELSPAN 300
+#define WHEELSPAN 208
 #endif
 class Omni4WD {
 public:

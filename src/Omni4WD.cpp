@@ -400,30 +400,33 @@ void Omni4WD::updatePose(float dt) {
   vels_.x = vtx;
   vels_.y = vty;
   vels_.theta = omega;
-  Serial.print("dt:");
-  Serial.print(dt,6);
-  Serial.print("\t");
-  Serial.print("vtx: ");
-  Serial.print(vtx, DEC);
-  Serial.print("\t");
-  Serial.print("vty: ");
-  Serial.print(vty, DEC);
-  Serial.print("\t");
-  Serial.print("omega: ");
-  Serial.print(omega, 4);
+//  Serial.print("dt:");
+//  Serial.print(dt,6);
+//  Serial.print("\t");
+//  Serial.print("vtx: ");
+//  Serial.print(vtx, DEC);
+//  Serial.print("\t");
+//  Serial.print("vty: ");
+//  Serial.print(vty, DEC);
+//  Serial.print("\t");
+//  Serial.print("omega: ");
+//  Serial.print(omega, 4);
   // speeds seems fine
 
 
-  int vr = sqrt((vtx*vtx)+(vty*vty));
-  float phi = atan2(vty,vtx);
+//  int vr = sqrt((vtx*vtx)+(vty*vty));
+//  float phi = atan2(vty,vtx);
 
   float dtheta = omega * dt;
+  pose_.theta += dtheta;
+  pose_.x += (vtx* cos(pose_.theta) - vty*sin(pose_.theta))*dt;
+  pose_.y += (vtx* sin(pose_.theta) + vty*cos(pose_.theta))*dt;
+
 //  Serial.print("\t");
 //  Serial.print("dtheta: ");
 //  Serial.println(dtheta, 4);
-  pose_.x+= vr* cos(pose_.theta + dtheta/4.0 + phi)*dt;
-  pose_.y += vr* sin(pose_.theta + dtheta/4.0 + phi)*dt;
-  pose_.theta += dtheta;
+//  pose_.x+= vr* cos(pose_.theta + dtheta/4.0 + phi)*dt;
+//  pose_.y += vr* sin(pose_.theta + dtheta/4.0 + phi)*dt;
   // TODO: these pose updates should also be based on the time of the change from when the wheel speed was recorded.
 }
 
