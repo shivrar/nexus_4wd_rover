@@ -77,7 +77,6 @@ void setup() {
 
   //TODO: Update diagram with updated stuff
   //TODO: work on speed controllers/motion controller
-  //TODO: Update DR code
   //lets use their classes then
   // velocity then angle & angular velocity
 //  Omni.setCarMovefl(0, 0, PI/15);
@@ -194,32 +193,7 @@ void ParseCommands(Task* me){
 void DeadReckon(Task* me){
   float dt = ((float)me->nowMicros - (float)me->lastCallTimeMicros)/(float)1000000.0;
   Omni.updatePose(dt);
-//  Serial.print("MMPS 1--> "); //display the speed of the MotorWheel
-//  Serial.print(wheelUL.getSpeedMMPS(),DEC); //display the speed of the motor
-//  Serial.print("\t");
-//  Serial.print("MMPS 2--> "); //display the speed of the MotorWheel
-//  Serial.print(wheelUR.getSpeedMMPS(),DEC); //display the speed of the motor
-//  Serial.print("\t");
-//  Serial.print("MMPS 3--> "); //display the speed of the MotorWheel
-//  Serial.print(wheelLL.getSpeedMMPS(),DEC); //display the speed of the motor
-//  Serial.print("\t");
-//  Serial.print("MMPS 4--> "); //display the speed of the MotorWheel
-//  Serial.print(wheelLR.getSpeedMMPS(),DEC); //display the speed of the motor
-//  Serial.print("\n");
-//  int vtx = (wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() + wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
-//  int vty = (wheelUL.getSpeedMMPS() + wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/4;
-//  float omega = ((-wheelUL.getSpeedMMPS() - wheelUR.getSpeedMMPS() - wheelLL.getSpeedMMPS() - wheelLR.getSpeedMMPS())/(4.0 * WHEELSPAN));
-//  Serial.print("vtx: ");
-//  Serial.print(vtx, DEC);
-//  Serial.print("\t");
-//  Serial.print("vty: ");
-//  Serial.print(vty, DEC);
-//  Serial.print("\t");
-//  Serial.print("omega: ");
-//  Serial.println(omega, 4);
-//  Serial.print("dt:");
-//  Serial.print(dt,6);
-//  Serial.print("\t");
+  #ifdef DEBUG
   Serial.print("x:");
   Serial.print(Omni.getPosex(),4);
   Serial.print("\t");
@@ -229,6 +203,7 @@ void DeadReckon(Task* me){
   Serial.print("theta:");
   Serial.print(Omni.getPosetheta(),4);
   Serial.print("\n");
+  #endif
 }
 
 //~~~~~~~~~~~~~~~~ ISR section
