@@ -2,7 +2,7 @@
 #define _NAMIKI_MOTOR	 //for Namiki 22CL-103501PG80:1
 #include "SoftTimer.h"
 #include <Omni4WD.h>
-#include "PinChangeInt.h"
+//#include "simple_pid.h"
 #include "PPMReader.h"
 
 #define MAX_LR_VEL 200
@@ -33,17 +33,32 @@ irqISR(irq4,isr4);
 MotorWheel wheelUR(10,7,18,19,&irq4);
 Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheelUR);
 
+//PID *uf_c;
+//SimplePID<int> uf_c(0.0001,0.31,0.00);
+//SimplePID<int> ul_c(0.0001,0.31,0.00);
+bool update_ang = false;
+//SimplePID<float> w_c(0.00018,0.31,0.00);
+
+int fwd_demand;
+//int fwd_curr;
+int fwd_out;
+
+int lr_demand;
+//int lr_curr;
+int lr_out;
+
+float w_demand;
+//float w_curr;
+float w_out;
+
 uint8_t count = 0;
 
 //Tasks are defined as such
 void callBack1(Task* me);
 Task t1(1000, callBack1);
 
-void RegulationCallback(Task* me);
-Task pid_reg(50, RegulationCallback);
-
-void SpeedCheck(Task* me);
-Task speed_check(500, SpeedCheck);
+void WheelRegulationCallback(Task* me);
+Task wheel_pid_reg(50, WheelRegulationCallback);
 
 void ParseCommands(Task* me);
 Task comm(50, ParseCommands);
@@ -51,8 +66,8 @@ Task comm(50, ParseCommands);
 void DeadReckon(Task* me);
 Task dr(50, DeadReckon);
 
-//void TestReader(Task *me);
-//Task ppm(50, TestReader);
+void SpeedRegulationCallback(Task* me);
+Task speed_pid_reg(100, SpeedRegulationCallback);
 //void DemoCallback(Task* me);
 //Task demo(1000, DemoCallback);
 // the setup function runs once when you press reset or power the board
@@ -61,7 +76,7 @@ Task dr(50, DeadReckon);
 //uint8_t i;
 unsigned int prev_ch[8];
 
-PPMReader *reader= NULL;
+PPMReader *reader= nullptr;
 
 void setup() {
   pinMode(13, OUTPUT);
@@ -74,20 +89,29 @@ void setup() {
   Omni.PIDEnable(0.21,0.01,0.005,10);
   reader = new PPMReader(6, 8);
 
-
+//  uf_c = new PID(&fwd_curr, &fwd_out, &fwd_demand, 0.0,0.0,0.0);
+//  uf_c->SetTunings(0.5, 0.0, 0.00);
+//  uf_c->SetInputLimits(0, MAX_FORWARD_VEL);
+//  uf_c->SetOutputLimits(0, MAX_FORWARD_VEL);
+//  uf_c->SetSampleTime(200);
+//  uf_c->SetMode(AUTO);
+  
   //TODO: Update diagram with updated stuff
-  //TODO: work on speed controllers/motion controller
+  //TODO: Add Serial IFC API
   //lets use their classes then
   // velocity then angle & angular velocity
 //  Omni.setCarMovefl(0, 0, PI/15);
   //Omni.setCarMove(30, (float)-PI/4, 0);
   //Omni.setCarMovefl(30,0,0);
+
   // let's add a task to the timer
   SoftTimer.add(&dr);
   SoftTimer.add(&t1);
-  SoftTimer.add(&pid_reg);
+  SoftTimer.add(&wheel_pid_reg);
   //SoftTimer.add(&speed_check);
   SoftTimer.add(&comm);
+  SoftTimer.add(&speed_pid_reg);
+  //SoftTimer.add(&demo);
 
   // do some interrupt magic here
   //PCintPort::attachInterrupt(6, GetCommands, FALLING);
@@ -107,17 +131,22 @@ void callBack1(Task* me) {
   digitalWrite(13, !digitalRead(13));
 }
 
-void RegulationCallback(Task* me){
+void WheelRegulationCallback(Task* me){
   Omni.PIDRegulate();
 }
 
-void SpeedCheck(Task* me){
-  Serial.print("speedRPM> ");
-  Serial.println(wheelUL.getSpeedRPM(),DEC);
-  Serial.print("MMPS--> "); //display the speed of the MotorWheel
-  Serial.println(wheelUL.getSpeedMMPS(),DEC); //display the speed of the motor
+void SpeedRegulationCallback(Task* me){
+  fwd_out = fwd_demand;
+  lr_out = lr_demand;
+  //update the angular velocity every other spin
+  if(update_ang){
+    w_out = w_demand;
+    update_ang = false;
+  } else
+    update_ang = true;
+  //There's no SS error and only a slight overshoot, so no speed controllers actually needed
+  Omni.setCarMovefl(fwd_out, lr_out, w_out);
 }
-
 
 void ParseCommands(Task* me){
   #ifdef DEBUG
@@ -184,8 +213,9 @@ void ParseCommands(Task* me){
   Serial.print(yaw);
   Serial.print("\n");
 #endif
-  //TODO: Implement speed controllers for uf & ul instead of sending in raw
-  Omni.setCarMovefl((int)fwd, (int)lr, yaw);
+  fwd_demand = int(fwd);
+  lr_demand = int(lr);
+  w_demand = yaw;
   //instead, iof defaulting to zero let's use the last valid data for the channel
   memcpy(prev_ch, curr_ch, 8 * sizeof (unsigned int));
 }
@@ -193,6 +223,10 @@ void ParseCommands(Task* me){
 void DeadReckon(Task* me){
   float dt = ((float)me->nowMicros - (float)me->lastCallTimeMicros)/(float)1000000.0;
   Omni.updatePose(dt);
+  // with the update also update the speeds for the controllers
+//  fwd_curr = (int)Omni.getFwdVel();
+//  lr_curr = (int)Omni.getLatVel();
+//  w_curr = Omni.getAngVel();
   #ifdef DEBUG
   Serial.print("x:");
   Serial.print(Omni.getPosex(),4);
@@ -248,27 +282,65 @@ void DeadReckon(Task* me){
 //}
 
 //void DemoCallback(Task* me){
-//  if(count == 0)
-//    //Start forward
-//    Omni.setCarMovefl(30,0,0);
-//  else if(count == 2)
-//    Omni.setCarMovefl(0,0,0);
-//  else if(count == 3)
-//    //Reverse
-//    Omni.setCarMovefl(-30,0,0);
-//  else if(count == 5)
-//    Omni.setCarMovefl(0,0,0);
-//  else if(count == 6)
-//    //Go left
-//    Omni.setCarMovefl(0,30,0);
-//  else if(count == 8)
-//    Omni.setCarMovefl(0,0,0);
-//  else if(count == 9)
-//    //Go right
-//    Omni.setCarMovefl(0, -30, 0);
-//  else if(count == 11)
-//    Omni.setCarMovefl(0,0,0);
-//  else if(count >=13)
+//  if(count == 0){
+//    fwd_out = 50;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 2){
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 3){
+//    fwd_out = -50;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 5){
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 6){
+//    fwd_out = 0;
+//    lr_out = 50;
+//    w_out = 0;
+//  }
+//  else if(count == 8){
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 9){
+//    fwd_out = 0;
+//    lr_out = -50;
+//    w_out = 0;
+//  }
+//  else if(count == 11){
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 12){
+//    //rotate left
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = MAX_ANG_VEL/2;
+//  }
+//  else if(count == 14){
+//    //rotate left
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = 0;
+//  }
+//  else if(count == 15){
+//    //rotate left
+//    fwd_out = 0;
+//    lr_out = 0;
+//    w_out = -MAX_ANG_VEL/2;
+//  }
+//  else if(count >=17)
 //    count = 0;
 //  count++;
 //}

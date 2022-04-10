@@ -231,6 +231,13 @@ void PID::Compute()
 
 		// perform the PID calculation.  
 		//float output = bias + kc * ((Err - lastErr)+ (taur * Err) + (taud * (Err - 2*lastErr + prevErr)));
+    /***
+     *
+     * cof_A = kc * (1 + taur + taud);
+		 * cof_B = kc * (1 + 2 * taud);
+		 * cof_C = kc * taud;
+     *
+     */
 		noInterrupts();
 		int output = bias + (cof_A * Err - cof_B * lastErr + cof_C * prevErr);
 		interrupts();
@@ -238,7 +245,7 @@ void PID::Compute()
 		//make sure the computed output is within output constraints
 		if (output < -outSpan) output = -outSpan;
 		else if (output > outSpan) output = outSpan;
-		
+
 
 		prevErr = lastErr;
 		lastErr = Err;
