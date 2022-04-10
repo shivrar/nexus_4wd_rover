@@ -29,14 +29,14 @@ class PPMReader {
     
     // The range of a channel's possible values (microseconds)
     unsigned minChannelValue = 900;
-    unsigned maxChannelValue = 2100;
+    unsigned maxChannelValue = 2150;
 
     // The maximum error (in either direction) in channel value with which the channel value is still considered valid
-    unsigned channelValueMaxError = 100;
+    unsigned channelValueMaxError = 1;
 
     // The minimum blanking time (microseconds) after which the frame current is considered to be finished
 	// Should be bigger than maxChannelValue + channelValueMaxError
-    unsigned blankTime = 5000;
+    unsigned blankTime = 2100;
 	
 	// The timeout (microseconds) after which the channels which were not updated are considered invalid
 	unsigned long failsafeTimeout = 50000L;
