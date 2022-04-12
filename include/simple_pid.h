@@ -2,6 +2,9 @@
 #define _SIMPLE_PID_H
 #include "Arduino.h"
 
+#define WINDOW_SIZE 3
+
+
 /*Here, the definition of the PID class begins. This is indicated by the keyword: "class"
 This is a general description of the data and functions that the class contains. 
 To use a class, we must make a specific instance of the class by declaring it into the same way we declare a variable. 
@@ -61,6 +64,11 @@ private:
   T integral_error;   //For storing the integral of the error
   unsigned long last_millis;       //To track elapsed_time
   //bool debug;             //This flag controls whether we print the contributions of each component when update is called
+  uint8_t INDEX = 0;
+  T VALUE = 0;
+  T SUM = 0;
+  T READINGS[WINDOW_SIZE];
+  T AVERAGED = 0;
 
 };
 
@@ -118,16 +126,21 @@ update(T demand, T measurement) {
   int time_delta = time_now - last_millis;
   last_millis = time_now;
 
-  /*
+  SUM = SUM - READINGS[INDEX];       // Remove the oldest entry from the sum
+  VALUE = measurement;                // Read the next measured value
+  READINGS[INDEX] = VALUE;           // Add the newest reading to the window
+  SUM = SUM + VALUE;                 // Add the newest reading to the sum
+  INDEX = (INDEX+1) % WINDOW_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
+  AVERAGED = SUM / WINDOW_SIZE;
+    /*
    * ================================
    * Your code goes implementation of a PID controller should go here
    * ================================
    */
-
-  //This represents the error term
-  // Decide what your error signal is (demand vs measurement)
+    //This represents the error term
+  // Decide what your error signal is (demand vs AVERAGED)
   T error;
-  error = demand - measurement;
+  error = demand - AVERAGED;
 
   //This represents the error derivative
   // Calculate the change in your error between update()
@@ -149,6 +162,11 @@ update(T demand, T measurement) {
   // overshoot you see using the Serial Plotter
   output_signal = Kp_output + Ki_output - Kd_output;
 
+  if(demand == 0 && (error >=0 ? error < 0.05*max_output : -error < 0.05*max_output)){
+    // if we're in the controller deadband around zero stop acting
+    output_signal = 0;
+    reset();
+  }
   /*
    * ===========================
    * Code below this point should not need to be changed

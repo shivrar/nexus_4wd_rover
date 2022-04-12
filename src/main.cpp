@@ -2,7 +2,8 @@
 #define _NAMIKI_MOTOR	 //for Namiki 22CL-103501PG80:1
 #include "SoftTimer.h"
 #include <Omni4WD.h>
-//#include "simple_pid.h"
+#include "simple_pid.h"
+#include "SimpleKalmanFilter.h"
 #include "PPMReader.h"
 
 #define MAX_LR_VEL 200
@@ -34,21 +35,25 @@ MotorWheel wheelUR(10,7,18,19,&irq4);
 Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheelUR);
 
 //PID *uf_c;
-//SimplePID<int> uf_c(0.0001,0.31,0.00);
-//SimplePID<int> ul_c(0.0001,0.31,0.00);
+SimplePID<int> uf_c(0.00001,0.25,0.00);
+SimplePID<int> ul_c(0.00001,0.25,0.00);
 bool update_ang = false;
-//SimplePID<float> w_c(0.00018,0.31,0.00);
+SimplePID<float> w_c(0.001,0.25,0.00);
+
+//SimpleKalmanFilter fwd_est(5.0,0.1,0.01);
+//SimpleKalmanFilter lr_est(5.0,0.1,0.01);
+//SimpleKalmanFilter w_est(5.0,0.1,0.01);
 
 int fwd_demand;
-//int fwd_curr;
+int fwd_curr;
 int fwd_out;
 
 int lr_demand;
-//int lr_curr;
+int lr_curr;
 int lr_out;
 
 float w_demand;
-//float w_curr;
+float w_curr;
 float w_out;
 
 uint8_t count = 0;
@@ -86,7 +91,15 @@ void setup() {
   TCCR1B=TCCR1B&0xf8|0x01;    // Pin9,Pin10 PWM 31250Hz
   TCCR2B=TCCR2B&0xf8|0x01;    // Pin3,Pin11 PWM 31250Hz
 
-  Omni.PIDEnable(0.21,0.01,0.005,10);
+  uf_c.setMax(MAX_FORWARD_VEL);
+  ul_c.setMax(MAX_LR_VEL);
+  w_c.setMax(MAX_ANG_VEL);
+
+  uf_c.reset();
+  ul_c.reset();
+  w_c.reset();
+
+  Omni.PIDEnable(0.2,0.01,0.005,10);
   reader = new PPMReader(6, 8);
 
 //  uf_c = new PID(&fwd_curr, &fwd_out, &fwd_demand, 0.0,0.0,0.0);
@@ -136,11 +149,11 @@ void WheelRegulationCallback(Task* me){
 }
 
 void SpeedRegulationCallback(Task* me){
-  fwd_out = fwd_demand;
-  lr_out = lr_demand;
+  fwd_out = uf_c.update(fwd_demand, fwd_curr);
+  lr_out = ul_c.update(lr_demand, lr_curr);
   //update the angular velocity every other spin
   if(update_ang){
-    w_out = w_demand;
+    w_out = w_c.update(w_demand, w_curr);
     update_ang = false;
   } else
     update_ang = true;
@@ -193,6 +206,12 @@ void ParseCommands(Task* me){
     lr = -throttle * (MapCommand(curr_ch[0], 800, 2200, -1.0, 1.0) * MAX_LR_VEL);
     fwd = -throttle * (MapCommand(curr_ch[1], 800, 2200,-1.0, 1.0) * MAX_FORWARD_VEL);
     yaw = -throttle * (MapCommand(curr_ch[3], 800, 2200, -1.0, 1.0) * MAX_ANG_VEL);
+    if(fabs(lr) < 0.1*MAX_LR_VEL)
+      lr = 0.0;
+    if(fabs(fwd) < 0.1*MAX_FORWARD_VEL)
+      fwd = 0.0;
+    if(fabs(yaw) < 0.05*MAX_ANG_VEL)
+      yaw = 0.0;
   } else {
     fwd = 0; lr = 0; yaw = 0.0; throttle = 0.0;
   #ifdef DEBUG
@@ -224,9 +243,9 @@ void DeadReckon(Task* me){
   float dt = ((float)me->nowMicros - (float)me->lastCallTimeMicros)/(float)1000000.0;
   Omni.updatePose(dt);
   // with the update also update the speeds for the controllers
-//  fwd_curr = (int)Omni.getFwdVel();
-//  lr_curr = (int)Omni.getLatVel();
-//  w_curr = Omni.getAngVel();
+  fwd_curr = (int)Omni.getFwdVel();
+  lr_curr = (int)Omni.getLatVel();
+  w_curr = Omni.getAngVel();
   #ifdef DEBUG
   Serial.print("x:");
   Serial.print(Omni.getPosex(),4);
