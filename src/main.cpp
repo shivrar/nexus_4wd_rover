@@ -70,6 +70,10 @@ Task speed_pid_reg(100, SpeedRegulationCallback);
 //Task demo(1000, DemoCallback);
 // the setup function runs once when you press reset or power the board
 
+//Setting a default time here since we would never actually use this period
+void CommandElapsed(Task* me);
+Task cmd_check(25, CommandElapsed);
+
 //void GetCommands();
 //uint8_t i;
 unsigned int prev_ch[8];
@@ -128,6 +132,10 @@ void callBack1(Task* me) {
 
 void WheelRegulationCallback(Task* me){
   Omni.PIDRegulate();
+}
+
+void CommandElapsed(Task* me){
+  //Set the time for this to tick over when the time based on the commnd
 }
 
 void SpeedRegulationCallback(Task* me){
