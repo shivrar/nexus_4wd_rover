@@ -5,14 +5,7 @@
 #include "simple_pid.h"
 #include "SimpleKalmanFilter.h"
 #include "PPMReader.h"
-
-#define MAX_LR_VEL 200
-#define MAX_FORWARD_VEL 200
-#define MAX_ANG_VEL PI/4
-
-float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
-  return static_cast<float>(x - in_min) * (out_max - out_min) / static_cast<float>(in_max - in_min) + out_min;
-}
+#include "common_items.h"
 
 // Rover wheel stuff here
 /*
@@ -102,20 +95,9 @@ void setup() {
   Omni.PIDEnable(0.2,0.01,0.005,10);
   reader = new PPMReader(6, 8);
 
-//  uf_c = new PID(&fwd_curr, &fwd_out, &fwd_demand, 0.0,0.0,0.0);
-//  uf_c->SetTunings(0.5, 0.0, 0.00);
-//  uf_c->SetInputLimits(0, MAX_FORWARD_VEL);
-//  uf_c->SetOutputLimits(0, MAX_FORWARD_VEL);
-//  uf_c->SetSampleTime(200);
-//  uf_c->SetMode(AUTO);
-  
   //TODO: Update diagram with updated stuff
   //TODO: Add Serial IFC API
   //lets use their classes then
-  // velocity then angle & angular velocity
-//  Omni.setCarMovefl(0, 0, PI/15);
-  //Omni.setCarMove(30, (float)-PI/4, 0);
-  //Omni.setCarMovefl(30,0,0);
 
   // let's add a task to the timer
   SoftTimer.add(&dr);
@@ -149,6 +131,22 @@ void WheelRegulationCallback(Task* me){
 }
 
 void SpeedRegulationCallback(Task* me){
+  // TODO: this block will either combine/ reject / figureout what to do with the various speed demands from the rx or
+  //  automated commands from the companion computer
+  /**
+   * Magic happens here
+   *
+   * basically before we send the commanda to the controllers we need to pick which one we would use.
+   *
+   * So before use the commands vels & timeout from either the external comms or the RX we wpould need to do several
+   * things. ::
+   *
+   * Still being tbdddddddd
+   *
+   *
+   * */
+
+
   fwd_out = uf_c.update(fwd_demand, fwd_curr);
   lr_out = ul_c.update(lr_demand, lr_curr);
   //update the angular velocity every other spin
