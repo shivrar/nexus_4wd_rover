@@ -155,7 +155,6 @@ void SpeedRegulationCallback(Task* me){
     update_ang = false;
   } else
     update_ang = true;
-  //There's no SS error and only a slight overshoot, so no speed controllers actually needed
   Omni.setCarMovefl(fwd_out, lr_out, w_out);
 }
 
