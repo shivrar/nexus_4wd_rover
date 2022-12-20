@@ -5,14 +5,7 @@
 #include "simple_pid.h"
 #include "SimpleKalmanFilter.h"
 #include "PPMReader.h"
-
-#define MAX_LR_VEL 200
-#define MAX_FORWARD_VEL 200
-#define MAX_ANG_VEL PI/4
-
-float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
-  return static_cast<float>(x - in_min) * (out_max - out_min) / static_cast<float>(in_max - in_min) + out_min;
-}
+#include "common_items.h"
 
 // Rover wheel stuff here
 /*
@@ -35,8 +28,8 @@ MotorWheel wheelUR(10,7,18,19,&irq4);
 Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheelUR);
 
 //PID *uf_c;
-SimplePID<int> uf_c(0.00001,0.25,0.00);
-SimplePID<int> ul_c(0.00001,0.25,0.00);
+SimplePID<int> uf_c(0.0001,0.25,0.00);
+SimplePID<int> ul_c(0.0001,0.25,0.00);
 bool update_ang = false;
 SimplePID<float> w_c(0.001,0.25,0.00);
 
@@ -56,11 +49,15 @@ float w_demand;
 float w_curr;
 float w_out;
 
-uint8_t count = 0;
+//uint8_t count = 0;
+
+bool ex_arm = false;
+bool first_step = false;
+uint8_t last_val = LOW;
 
 //Tasks are defined as such
 void callBack1(Task* me);
-Task t1(1000, callBack1);
+Task t1(50, callBack1);
 
 void WheelRegulationCallback(Task* me);
 Task wheel_pid_reg(50, WheelRegulationCallback);
@@ -76,6 +73,10 @@ Task speed_pid_reg(100, SpeedRegulationCallback);
 //void DemoCallback(Task* me);
 //Task demo(1000, DemoCallback);
 // the setup function runs once when you press reset or power the board
+
+//Setting a default time here since we would never actually use this period
+void CommandElapsed(Task* me);
+Task cmd_check(25, CommandElapsed);
 
 //void GetCommands();
 //uint8_t i;
@@ -102,20 +103,9 @@ void setup() {
   Omni.PIDEnable(0.2,0.01,0.005,10);
   reader = new PPMReader(6, 8);
 
-//  uf_c = new PID(&fwd_curr, &fwd_out, &fwd_demand, 0.0,0.0,0.0);
-//  uf_c->SetTunings(0.5, 0.0, 0.00);
-//  uf_c->SetInputLimits(0, MAX_FORWARD_VEL);
-//  uf_c->SetOutputLimits(0, MAX_FORWARD_VEL);
-//  uf_c->SetSampleTime(200);
-//  uf_c->SetMode(AUTO);
-  
   //TODO: Update diagram with updated stuff
   //TODO: Add Serial IFC API
   //lets use their classes then
-  // velocity then angle & angular velocity
-//  Omni.setCarMovefl(0, 0, PI/15);
-  //Omni.setCarMove(30, (float)-PI/4, 0);
-  //Omni.setCarMovefl(30,0,0);
 
   // let's add a task to the timer
   SoftTimer.add(&dr);
@@ -138,17 +128,39 @@ void loop()
 
 
 void callBack1(Task* me) {
+// can use this one as an indicator if armed or not
 //  float dt = ((float)micros() - (float)me->lastCallTimeMicros)/(float)1000000.0;
 //  Serial.print("dt: ");
 //  Serial.println(dt,6);
-  digitalWrite(13, !digitalRead(13));
+//  digitalWrite(13, !digitalRead(13));
+  digitalWrite(13, uint8_t(ex_arm));
 }
 
 void WheelRegulationCallback(Task* me){
   Omni.PIDRegulate();
 }
 
+void CommandElapsed(Task* me){
+  //Set the time for this to tick over when the time based on the commnd
+}
+
 void SpeedRegulationCallback(Task* me){
+  // TODO: this block will either combine/ reject / figureout what to do with the various speed demands from the rx or
+  //  automated commands from the companion computer
+  /**
+   * Magic happens here
+   *
+   * basically before we send the commanda to the controllers we need to pick which one we would use.
+   *
+   * So before use the commands vels & timeout from either the external comms or the RX we wpould need to do several
+   * things. ::
+   *
+   * Still being tbdddddddd
+   *
+   *
+   * */
+
+
   fwd_out = uf_c.update(fwd_demand, fwd_curr);
   lr_out = ul_c.update(lr_demand, lr_curr);
   //update the angular velocity every other spin
@@ -157,7 +169,6 @@ void SpeedRegulationCallback(Task* me){
     update_ang = false;
   } else
     update_ang = true;
-  //There's no SS error and only a slight overshoot, so no speed controllers actually needed
   Omni.setCarMovefl(fwd_out, lr_out, w_out);
 }
 
@@ -201,42 +212,68 @@ void ParseCommands(Task* me){
                              reader->latestValidChannelValue(7,prev_ch[6]),
                              reader->latestValidChannelValue(8,prev_ch[7])};
 
-  throttle = MapCommand(curr_ch[2],800, 2200, 0.0, 1.0);
-  if(throttle <= 1.1 && curr_ch[6] > 1400) {
-    lr = -throttle * (MapCommand(curr_ch[0], 800, 2200, -1.0, 1.0) * MAX_LR_VEL);
-    fwd = -throttle * (MapCommand(curr_ch[1], 800, 2200,-1.0, 1.0) * MAX_FORWARD_VEL);
-    yaw = -throttle * (MapCommand(curr_ch[3], 800, 2200, -1.0, 1.0) * MAX_ANG_VEL);
-    if(fabs(lr) < 0.1*MAX_LR_VEL)
-      lr = 0.0;
-    if(fabs(fwd) < 0.1*MAX_FORWARD_VEL)
-      fwd = 0.0;
-    if(fabs(yaw) < 0.05*MAX_ANG_VEL)
-      yaw = 0.0;
-  } else {
-    fwd = 0; lr = 0; yaw = 0.0; throttle = 0.0;
-  #ifdef DEBUG
-    Serial.println("Comms Disconnected!! zero'ing commands!!");
-  #endif
+  uint8_t curr_state = curr_ch[4] >= 1400 ? HIGH : LOW;
+
+  // if change detected then we do something
+  if(curr_state != last_val) {
+    if(curr_state == HIGH)
+      first_step = true;
+    else if(first_step)
+      ex_arm = !ex_arm;
+    else {
+      ex_arm = false;
+      first_step = false;
+    }
   }
+
+  if(!ex_arm) {
+    throttle = MapCommand(curr_ch[2], 800, 2200, 0.0, 1.0);
+    if (throttle <= 1.1 && curr_ch[6] > 1400) {
+      lr = -throttle * (MapCommand(curr_ch[0], 800, 2200, -1.0, 1.0) * MAX_LR_VEL);
+      fwd = -throttle * (MapCommand(curr_ch[1], 800, 2200, -1.0, 1.0) * MAX_FORWARD_VEL);
+      yaw = -throttle * (MapCommand(curr_ch[3], 800, 2200, -1.0, 1.0) * MAX_ANG_VEL);
+      if (fabs(lr) < 0.1 * MAX_LR_VEL)
+        lr = 0.0;
+      if (fabs(fwd) < 0.1 * MAX_FORWARD_VEL)
+        fwd = 0.0;
+      if (fabs(yaw) < 0.05 * MAX_ANG_VEL)
+        yaw = 0.0;
+    } else {
+      fwd = 0;
+      lr = 0;
+      yaw = 0.0;
 #ifdef DEBUG
-  Serial.print("throttle:");
-  Serial.print(throttle,4);
-  Serial.print("\t");
-  Serial.print("Left/Right:");
-  Serial.print((int)lr);
-  Serial.print("\t");
-  Serial.print("Forward:");
-  Serial.print((int)fwd);
-  Serial.print("\t");
-  Serial.print("Yaw:");
-  Serial.print(yaw);
-  Serial.print("\n");
+      Serial.println("Comms Disconnected!! zero'ing commands!!");
 #endif
+    }
+#ifdef DEBUG
+    Serial.print("throttle:");
+    Serial.print(throttle,4);
+    Serial.print("\t");
+    Serial.print("Left/Right:");
+    Serial.print((int)lr);
+    Serial.print("\t");
+    Serial.print("Forward:");
+    Serial.print((int)fwd);
+    Serial.print("\t");
+    Serial.print("Yaw:");
+    Serial.print(yaw);
+    Serial.print("\n");
+#endif
+  } else {
+    // this branch should use the serial commands?
+    fwd = 0;
+    lr = 0;
+    yaw = 0.0;
+  }
+  last_val = curr_state;
+
   fwd_demand = int(fwd);
   lr_demand = int(lr);
   w_demand = yaw;
   //instead, iof defaulting to zero let's use the last valid data for the channel
   memcpy(prev_ch, curr_ch, 8 * sizeof (unsigned int));
+  // if ex_arm_is decided we can probably start the task for external commands
 }
 
 void DeadReckon(Task* me){
