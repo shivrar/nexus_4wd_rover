@@ -65,6 +65,6 @@ class SoftTimerClass
     Task* _tasks = NULL;
 };
 
-extern SoftTimerClass SoftTimer;
+extern SoftTimerClass scheduler;
 
 #endif

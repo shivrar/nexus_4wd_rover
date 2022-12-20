@@ -9,6 +9,8 @@
 #define MAX_FORWARD_VEL 200
 #define MAX_ANG_VEL PI/4
 
+#define STATUS_LED 13
+
 float MapCommand(uint16_t x, uint16_t in_min, uint16_t in_max, float out_min, float out_max){
   return static_cast<float>(x - in_min) * (out_max - out_min) / static_cast<float>(in_max - in_min) + out_min;
 }
@@ -23,6 +25,7 @@ struct VelCommand{
   int lr;
   float omega;
   uint32_t time;
+  bool executed = false;
 
   inline explicit VelCommand():fwd(0),lr(0), omega(0), time(0){}
 

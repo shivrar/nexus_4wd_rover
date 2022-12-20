@@ -4,6 +4,7 @@
 #include <Omni4WD.h>
 #include "simple_pid.h"
 #include "SimpleKalmanFilter.h"
+#include "SoftTimers.h"
 #include "PPMReader.h"
 #include "common_items.h"
 
@@ -30,7 +31,7 @@ Omni4WD Omni(&wheelUL,&wheelLL,&wheelLR,&wheelUR);
 //PID *uf_c;
 SimplePID<int> uf_c(0.0001,0.25,0.00);
 SimplePID<int> ul_c(0.0001,0.25,0.00);
-bool update_ang = false;
+//bool update_ang = false;
 SimplePID<float> w_c(0.001,0.25,0.00);
 
 //SimpleKalmanFilter fwd_est(5.0,0.1,0.01);
@@ -49,6 +50,9 @@ float w_demand;
 float w_curr;
 float w_out;
 
+SoftTimer countdown; //millisecond timer
+VelCommand ex_cmd;
+
 //uint8_t count = 0;
 
 bool ex_arm = false;
@@ -56,8 +60,8 @@ bool first_step = false;
 uint8_t last_val = LOW;
 
 //Tasks are defined as such
-void callBack1(Task* me);
-Task t1(50, callBack1);
+void StatusCB(Task* me);
+Task t1(50, StatusCB);
 
 void WheelRegulationCallback(Task* me);
 Task wheel_pid_reg(50, WheelRegulationCallback);
@@ -75,8 +79,8 @@ Task speed_pid_reg(100, SpeedRegulationCallback);
 // the setup function runs once when you press reset or power the board
 
 //Setting a default time here since we would never actually use this period
-void CommandElapsed(Task* me);
-Task cmd_check(25, CommandElapsed);
+void SerialParser(Task* me);
+Task cmd_check(25, SerialParser);
 
 //void GetCommands();
 //uint8_t i;
@@ -85,7 +89,7 @@ unsigned int prev_ch[8];
 PPMReader *reader= nullptr;
 
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(STATUS_LED, OUTPUT);
   // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
 
@@ -108,12 +112,12 @@ void setup() {
   //lets use their classes then
 
   // let's add a task to the timer
-  SoftTimer.add(&dr);
-  SoftTimer.add(&t1);
-  SoftTimer.add(&wheel_pid_reg);
+  scheduler.add(&dr);
+  scheduler.add(&t1);
+  scheduler.add(&wheel_pid_reg);
   //SoftTimer.add(&speed_check);
-  SoftTimer.add(&comm);
-  SoftTimer.add(&speed_pid_reg);
+  scheduler.add(&comm);
+  scheduler.add(&speed_pid_reg);
   //SoftTimer.add(&demo);
 
   // do some interrupt magic here
@@ -123,24 +127,24 @@ void setup() {
 void loop()
 {
   // After careful consideration it's better to run everything with timer based stuff & interrupts
-  SoftTimer.run();
+  scheduler.run();
 }
 
 
-void callBack1(Task* me) {
+void StatusCB(Task* me) {
 // can use this one as an indicator if armed or not
 //  float dt = ((float)micros() - (float)me->lastCallTimeMicros)/(float)1000000.0;
 //  Serial.print("dt: ");
 //  Serial.println(dt,6);
-//  digitalWrite(13, !digitalRead(13));
-  digitalWrite(13, uint8_t(ex_arm));
+//  digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
+  digitalWrite(STATUS_LED, uint8_t(ex_arm));
 }
 
 void WheelRegulationCallback(Task* me){
   Omni.PIDRegulate();
 }
 
-void CommandElapsed(Task* me){
+void SerialParser(Task* me){
   //Set the time for this to tick over when the time based on the commnd
 }
 
@@ -163,12 +167,7 @@ void SpeedRegulationCallback(Task* me){
 
   fwd_out = uf_c.update(fwd_demand, fwd_curr);
   lr_out = ul_c.update(lr_demand, lr_curr);
-  //update the angular velocity every other spin
-  if(update_ang){
-    w_out = w_c.update(w_demand, w_curr);
-    update_ang = false;
-  } else
-    update_ang = true;
+  w_out = w_c.update(w_demand, w_curr);
   Omni.setCarMovefl(fwd_out, lr_out, w_out);
 }
 
@@ -218,8 +217,10 @@ void ParseCommands(Task* me){
   if(curr_state != last_val) {
     if(curr_state == HIGH)
       first_step = true;
-    else if(first_step)
+    else if(first_step){
       ex_arm = !ex_arm;
+      ex_cmd = VelCommand(1.0,0.0,0.0, 1000);
+    }
     else {
       ex_arm = false;
       first_step = false;
@@ -261,10 +262,22 @@ void ParseCommands(Task* me){
     Serial.print("\n");
 #endif
   } else {
-    // this branch should use the serial commands?
-    fwd = 0;
-    lr = 0;
-    yaw = 0.0;
+    //TODO: continue from here
+    // This branch of the logic should do the following:
+    // - Get the command from the serial and start the countdown timer, if the command is null do nothing.
+//    if(ex_cmd.time == 0.0)
+//    {
+//      fwd = 0;
+//      lr = 0;
+//      yaw = 0.0;
+//    } else {
+//      fwd = 0.5;
+//      lr = 0;
+//      yaw = 0.0;
+//    }
+    if(countdown.hasTimedOut()){
+
+    }
   }
   last_val = curr_state;
 

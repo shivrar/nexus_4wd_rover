@@ -133,4 +133,4 @@ void SoftTimerClass::testAndCall(Task* task) {
 /**
  * Create a singleton from this manager class.
  */
-SoftTimerClass SoftTimer;
+SoftTimerClass scheduler;
